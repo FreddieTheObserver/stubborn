@@ -1,0 +1,6 @@
+bin/
+*.out
+*.db
+*.db-wal
+*.db-shm
+.claude/settings.local.json

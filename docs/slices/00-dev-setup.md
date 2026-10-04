@@ -1,6 +1,6 @@
 # 00: Development setup
 
-Status: Ready
+Status: In progress
 Depends on: none
 Roadmap milestone: none (groundwork for milestone 1)
 
@@ -26,9 +26,9 @@ Does not deliver (and where it goes):
 
 ## Done when
 
-- [ ] `make check` passes in a fresh clone on a machine with Go 1.26 and gcc (clone into a temporary directory and run `make check` there).
-- [ ] Every gate in `make check` fails when it should: an unformatted file, an untidy `go.mod`, a dependency that uses cgo, a vet finding, a staticcheck finding, and a data race each make it exit non-zero (run once by hand, results recorded under Changes).
-- [ ] The library's `go.mod` has no requirements (`go list -m all` prints only `github.com/FreddieTheObserver/stubborn`).
+- [x] `make check` passes in a fresh clone on a machine with Go 1.26 and gcc (clone into a temporary directory and run `make check` there).
+- [x] Every gate in `make check` fails when it should: an unformatted file, an untidy `go.mod`, a dependency that uses cgo, a vet finding, a staticcheck finding, and a data race each make it exit non-zero (run once by hand, results recorded under Changes).
+- [x] The library's `go.mod` has no requirements (`go list -m all` prints only `github.com/FreddieTheObserver/stubborn`).
 - [ ] CI runs `make check` on a push and passes (the first workflow run on GitHub after the slice is pushed).
 
 ## Design
@@ -83,14 +83,45 @@ Open questions:
 
 ## Changes
 
-Filled in at the end.
-
 Commits:
+
+- Listed when the slice is Done.
 
 Planned vs actual:
 
+Every row of the Design table was built as planned.
+`make check` passes, and `go list -m all` prints only the module itself.
+The fresh-clone item was run before the first commit, so instead of `git clone` it copied the files a clone would contain (`git ls-files -co --exclude-standard`) into a temporary directory, with an empty `GOPATH`, module cache and build cache.
+Repeat it with a real clone after the commit.
+
+Each gate was then broken in its own fresh copy:
+
+| Injected defect | `make check` exit | Failed at |
+| --------------- | ----------------- | --------- |
+| none | 0 | |
+| `var  X = 1` in a new file | 2 | `fmt-check`, naming the file |
+| unused `require golang.org/x/sync` | 2 | `tidy-check`, printing the diff |
+| `import _ "github.com/mattn/go-sqlite3"`, tidied | 2 | `cgo-check`, naming `github.com/mattn/go-sqlite3` |
+| `fmt.Printf("%d", "s")` | 2 | `vet`, printf check |
+| unused unexported function | 2 | `lint`, staticcheck U1000 |
+| unsynchronized write from a goroutine in a test | 2 | `test`, with `WARNING: DATA RACE` |
+
+The CI item is still open until the slice is pushed.
+
 Deviations from the design, and why:
+
+- The format, tidy and cgo checks are their own targets (`fmt-check`, `tidy-check`, `cgo-check`), which `check` runs as prerequisites in order, instead of steps inside `check`'s recipe.
+  Each gate can then be run alone, and a failure names the gate.
+- The workflow sets `permissions: contents: read`, so its token can do nothing but check out the code.
+  The actions are `actions/checkout@v7` and `actions/setup-go@v7`, the current majors.
 
 README or invariant updates this caused:
 
-What surprised me (optional, only when there is something worth recording):
+- Development section rewritten as planned.
+- The status line said "No code yet", which is no longer true, so it says "No engine code yet".
+- The Layout lists `doc.go` and `tools/`.
+
+What surprised me:
+
+- `go mod tidy -modfile=tools/go.mod` copies the library's dependencies into the tools file, because tidy still reads the root module's imports (checked with `mattn/go-sqlite3` in a scratch copy).
+  Tools are changed only with `go get -tool -modfile=tools/go.mod`, and `CLAUDE.md` says so.

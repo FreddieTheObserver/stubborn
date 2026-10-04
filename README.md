@@ -47,7 +47,7 @@ func main() {
 The process can exit during those 72 hours.
 Until the timer is due, the run is one row in the database, and then any worker running `eng.Run` picks it up.
 
-**Status: design.** No code yet.
+**Status: design.** No engine code yet.
 Every milestone in the roadmap ends with a library that works, so the project can stop at any of them.
 
 Temporal exists and is what to use in production.
@@ -341,6 +341,7 @@ Binding, because each one would be a project of its own.
 ## Layout
 
 ```
+doc.go               package documentation                                  [plumbing]
 stubborn.go          Engine, Register, Start, Handle, Options               [plumbing]
 run.go               Run: sequence numbers, history, replay, unwinding      [core]
 step.go              Step, IdempotencyKey, Attempt, Now                     [core]
@@ -357,6 +358,7 @@ internal/failpoint/  crash injection points, only with -tags failpoints     [plu
 cmd/stubborn/        CLI: list, inspect, cancel, retry                      [plumbing]
 cmd/torture/         chaos harness and invariant checker                    [plumbing]
 examples/            transfer (timer), flaky (retries), ledger (TxStep)
+tools/               go.mod pinning development tools (staticcheck)         [plumbing]
 ```
 
 `[core]` marks where the understanding lives: replay, suspension, fencing, and the claim and commit SQL.
@@ -367,13 +369,22 @@ Any file, `[core]` included, can be written by hand or by an assistant, and each
 ## Development
 
 - Go 1.26 on Linux, developed under WSL2 like warden.
+  gcc is needed too, because the race detector uses cgo even though the library does not.
 - Keep the repository on the Linux filesystem, not under `/mnt/c`.
   SQLite's file locking is unreliable on drvfs, and the crash tests depend on it.
 - SQLite through `modernc.org/sqlite` (pure Go, no cgo).
   Postgres through `pgx/v5`, running in Docker for tests.
 - Module path `github.com/FreddieTheObserver/stubborn`.
+- staticcheck is pinned in `tools/go.mod`, not in the library's `go.mod`, so programs that import stubborn do not inherit its dependencies.
 
-Planned targets: `make test` (unit tests and SQLite), `make test-pg` (starts Postgres in Docker), and `make torture`.
+| Target | Does |
+|---|---|
+| `make check` | Everything CI runs, cheapest first: formatting, `go mod tidy`, no cgo anywhere in the build, `go vet`, staticcheck, and the tests under `-race`. Run it before every commit. |
+| `make test` | `go test -race ./...` |
+| `make vet`, `make lint` | `go vet` and staticcheck. |
+| `make fmt`, `make tidy` | Fix what `make check` reports about formatting and `go.mod`. |
+
+`make test-pg` (Postgres in Docker) arrives with milestone 4, and `make torture` with milestone 5.
 
 ## Roadmap
 
