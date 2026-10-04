@@ -1,6 +1,6 @@
 # 00: Development setup
 
-Status: In progress
+Status: Done
 Depends on: none
 Roadmap milestone: none (groundwork for milestone 1)
 
@@ -29,7 +29,7 @@ Does not deliver (and where it goes):
 - [x] `make check` passes in a fresh clone on a machine with Go 1.26 and gcc (clone into a temporary directory and run `make check` there).
 - [x] Every gate in `make check` fails when it should: an unformatted file, an untidy `go.mod`, a dependency that uses cgo, a vet finding, a staticcheck finding, and a data race each make it exit non-zero (run once by hand, results recorded under Changes).
 - [x] The library's `go.mod` has no requirements (`go list -m all` prints only `github.com/FreddieTheObserver/stubborn`).
-- [ ] CI runs `make check` on a push and passes (the first workflow run on GitHub after the slice is pushed).
+- [x] CI runs `make check` on a push and passes (the first workflow run on GitHub after the slice is pushed).
 
 ## Design
 
@@ -85,14 +85,14 @@ Open questions:
 
 Commits:
 
-- Listed when the slice is Done.
+- `908a654` Add slice template and slice 00 design
+- `57d64ab` Set up module, make check, and CI (slice 00)
 
 Planned vs actual:
 
 Every row of the Design table was built as planned.
 `make check` passes, and `go list -m all` prints only the module itself.
-The fresh-clone item was run before the first commit, so instead of `git clone` it copied the files a clone would contain (`git ls-files -co --exclude-standard`) into a temporary directory, with an empty `GOPATH`, module cache and build cache.
-Repeat it with a real clone after the commit.
+After `57d64ab`, `make check` passed in a `git clone` with an empty `GOPATH`, module cache and build cache.
 
 Each gate was then broken in its own fresh copy:
 
@@ -106,7 +106,7 @@ Each gate was then broken in its own fresh copy:
 | unused unexported function | 2 | `lint`, staticcheck U1000 |
 | unsynchronized write from a goroutine in a test | 2 | `test`, with `WARNING: DATA RACE` |
 
-The CI item is still open until the slice is pushed.
+The first CI run, on the push of `57d64ab`, passed in 38 seconds on Go 1.26.0 read from `go.mod`, with every gate in its log ([run 37210984269](https://github.com/FreddieTheObserver/stubborn/actions/runs/37210984269)).
 
 Deviations from the design, and why:
 
