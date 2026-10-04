@@ -361,7 +361,8 @@ examples/            transfer (timer), flaky (retries), ledger (TxStep)
 
 `[core]` marks where the understanding lives: replay, suspension, fencing, and the claim and commit SQL.
 It is roughly 1,500 lines.
-Whether warden's authorship rule applies here (core typed by hand, plumbing delegated) is still open, and should be decided before milestone 1.
+Warden's authorship rule (core typed by hand, plumbing delegated) does not apply here.
+Any file, `[core]` included, can be written by hand or by an assistant, and each slice doc's design table records which.
 
 ## Development
 
