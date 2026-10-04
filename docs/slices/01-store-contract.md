@@ -1,6 +1,6 @@
 # 01: Store contract
 
-Status: Ready
+Status: In progress
 Depends on: 00
 Roadmap milestone: 1
 
