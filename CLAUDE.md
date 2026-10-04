@@ -19,9 +19,15 @@ Change tool versions with `go get -tool -modfile=tools/go.mod <pkg>@<version>`, 
 Never run `go mod tidy -modfile=tools/go.mod`: it copies the library's dependencies into the tools file.
 No package in the build may use cgo, but gcc must be installed because `-race` needs it.
 
-## Slices
+## Slices and branches
 
-Work is planned as slices in `docs/slices/NN-short-name.md`, copied from `docs/slices/TEMPLATE.md`, which defines the status lifecycle.
+Work is planned as slices in `docs/slices/NN-short-name.md`, copied from `docs/slices/TEMPLATE.md`, which defines the status lifecycle and the branch step that goes with each status.
 Write code for a slice only once its doc is Ready.
 From In progress on, its Scope, Done when and Design sections are frozen, and deviations are recorded under Changes.
 The Author column of each Design row (`user`, `assist`, `both`) says who writes that code.
+
+A ruleset on `main` blocks direct pushes.
+Every change, slice or not, reaches `main` through a pull request that passes the `check` job and is merged with a merge commit.
+A slice's branch is `slice/NN-short-name`, and other changes use a short descriptive branch name.
+Squash and rebase merges are disabled because slice docs list commit hashes, so do not rewrite a branch's history after its slice doc lists them.
+The user merges pull requests.

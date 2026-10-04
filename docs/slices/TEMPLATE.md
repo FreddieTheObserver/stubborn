@@ -8,11 +8,13 @@ Roadmap milestone: M
 Copy this file to docs/slices/NN-short-name.md.
 Delete any section that does not apply instead of leaving it empty.
 
+Each slice lives on its own branch, slice/NN-short-name, created from main when the doc is started.
+
 Status lifecycle:
 - Aligning: the scope and design are being worked out.
-- Ready: the design is reviewed and there are no open questions, so coding may start.
-- In progress: code is being written. The Scope, Done when and Design sections are now frozen, and any change is recorded under Changes.
-- Done: every Done when item passes and Changes is filled in.
+- Ready: the design is reviewed and there are no open questions, so coding may start. The doc at Ready is the first commit on the branch.
+- In progress: code is being written. The Scope, Done when and Design sections are now frozen, and any change is recorded under Changes. Once the Done when items pass locally, push the branch and open a pull request.
+- Done: every Done when item passes, CI on the pull request included, and Changes is filled in. That update is the last commit on the branch, and the pull request is then merged with a merge commit.
 - Dropped: abandoned, with the reason in Changes.
 -->
 
@@ -63,6 +65,8 @@ Open questions:
 ## Changes
 
 Filled in at the end.
+
+Pull request: #N
 
 Commits:
 
