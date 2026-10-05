@@ -1,6 +1,6 @@
 # 01: Store contract
 
-Status: In progress
+Status: Done
 Depends on: 00
 Roadmap milestone: 1
 
@@ -24,12 +24,12 @@ Does not deliver (and where it goes):
 
 ## Done when
 
-- [ ] `make check` runs the conformance suite against memstore under `-race`, and it passes (`TestConformance` in `store/memstore`).
-- [ ] Creating a run is idempotent: the same ID, workflow and input twice make one run, even after that run has finished, and a different workflow or input returns `ErrIDConflict` (Run ID guarantee, `TestConformance/CreateIdempotent`).
-- [ ] Eight concurrent claimers over fifty runs claim each run exactly once, and a claimer gets only runs of the workflows it names (invariant 10, `TestConformance/ClaimExclusive`, `TestConformance/ClaimWorkflowFilter`).
-- [ ] An expired lease can be claimed again with the epoch one higher, a live lease cannot, and a heartbeat makes an expired lease live again (`TestConformance/LeaseExpiry`).
-- [ ] After a run is claimed again, `Heartbeat`, `AppendCheckpoint` and `Finish` with the old fence return `ErrFenced` and change nothing (invariant 4, `TestConformance/StaleEpoch`).
-- [ ] A checkpoint can only be appended at the next sequence number and is never overwritten, and a finished run is never claimed and rejects every write (invariant 6, `TestConformance/CheckpointsAppendOnly`, `TestConformance/FinishedRunsFrozen`).
+- [x] `make check` runs the conformance suite against memstore under `-race`, and it passes (`TestConformance` in `store/memstore`).
+- [x] Creating a run is idempotent: the same ID, workflow and input twice make one run, even after that run has finished, and a different workflow or input returns `ErrIDConflict` (Run ID guarantee, `TestConformance/CreateIdempotent`).
+- [x] Eight concurrent claimers over fifty runs claim each run exactly once, and a claimer gets only runs of the workflows it names (invariant 10, `TestConformance/ClaimExclusive`, `TestConformance/ClaimWorkflowFilter`).
+- [x] An expired lease can be claimed again with the epoch one higher, a live lease cannot, and a heartbeat makes an expired lease live again (`TestConformance/LeaseExpiry`).
+- [x] After a run is claimed again, `Heartbeat`, `AppendCheckpoint` and `Finish` with the old fence return `ErrFenced` and change nothing (invariant 4, `TestConformance/StaleEpoch`).
+- [x] A checkpoint can only be appended at the next sequence number and is never overwritten, and a finished run is never claimed and rejects every write (invariant 6, `TestConformance/CheckpointsAppendOnly`, `TestConformance/FinishedRunsFrozen`).
 
 ## Design
 
@@ -138,18 +138,31 @@ Open questions:
 
 ## Changes
 
-Filled in at the end.
-
-Pull request: #N
+Pull request: #2
 
 Commits:
 
-- `abc1234` message
+- `efd75a2` Add slice 01 design
+- `5543da2` Add the store contract (slice 01)
+- `a33e682` Add memstore and the conformance suite (slice 01)
 
 Planned vs actual:
 
+Every row of the Design table was built as planned, with the signatures, types and errors it lists.
+`TestConformance` runs eight subtests, one for each test named under Done when plus `NoAliasing`, and all of them pass under `-race` in `make check`.
+The suite also checks the Contract lines that have no Done when item of their own: `GetRun` and `History` on an unknown run, a fence for an unknown run, an empty workflow list claiming nothing, `Checkpoint.Epoch` being ignored on the way in, a rejected `Heartbeat` not extending the lease, and `AppendCheckpoint` and `Finish` rejecting any status the contract does not allow.
+The first CI run on the pull request, on `a33e682`, passed in 34 seconds on Go 1.26.0 ([run 37350547964](https://github.com/FreddieTheObserver/stubborn/actions/runs/37350547964)).
+
 Deviations from the design, and why:
+
+- memstore's `Claim` takes the earliest due run, as the README's claim query does with `ORDER BY due_at`, and breaks ties by the lowest ID.
+  The contract promises no order and the suite does not test one, but slice 02's engine tests then get the same run every time instead of one picked by map iteration order.
+- Every memstore method returns `ctx.Err()` before taking the lock, so a cancelled context is reported ahead of a fence mismatch.
+  The contract line that a fence mismatch wins over any other error covers the store's own errors, since a SQL store cannot check a fence without a live context either.
+- memstore wraps each sentinel error with the run ID, and with the sequence numbers where they apply, so callers and the suite match errors with `errors.Is`.
+  An invalid status gets a plain error rather than a sentinel, because the design lists none for it and the suite only checks that the call fails.
 
 README or invariant updates this caused:
 
-What surprised me (optional, only when there is something worth recording):
+- None.
+  The Layout already lists the three packages, and the claim returning the database's current time stays in the README for milestone 2, as Scope records.
